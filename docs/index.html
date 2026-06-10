@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consejeras · Gestión de Clases</title>
+    <!-- Day.js core + plugins: utc, timezone -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/utc.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/timezone.js"></script>
+    <script>
+        dayjs.extend(window.dayjs_plugin_utc);
+        dayjs.extend(window.dayjs_plugin_timezone);
+        // Fijar zona horaria por defecto a Lima (Perú)
+        dayjs.tz.setDefault('America/Lima');
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: linear-gradient(135deg, #eef2f7 0%, #d9e2ec 100%);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.96);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.35);
+            overflow: hidden;
+        }
+
+        .top-bar {
+            background: #ffffffcc;
+            padding: 1rem 2rem 0 2rem;
+            border-bottom: 2px solid #cbdde6;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.7rem 1.6rem;
+            border-radius: 2rem 2rem 0 0;
+            cursor: pointer;
+            color: #2c5a74;
+            transition: 0.2s;
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #1f6e8c;
+            border-bottom: 3px solid #1f6e8c;
+        }
+
+        .page {
+            display: none;
+            padding: 2rem;
+            animation: fade 0.25s ease;
+        }
+
+        .page.active-page {
+            display: block;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #164a5f;
+            margin-bottom: 0.5rem;
+        }
+
+        .sub {
+            color: #3e6b87;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .counselor-card {
+            background: white;
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+            border: 1px solid #e2edf2;
+        }
+
+        .counselor-card h3 {
+            font-size: 1.3rem;
+            color: #164a5f;
+            border-left: 4px solid #4c9fbf;
+            padding-left: 12px;
+            margin-bottom: 0.6rem;
+        }
+
+        .class-tag {
+            background: #e6f4fa;
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #22668d;
+            margin: 0.5rem 0;
+        }
+
+        .birthday {
+            background: #fff0db;
+            border-radius: 30px;
+            padding: 0.2rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #c26b1a;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        th, td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #e9edf2;
+        }
+
+        th {
+            background: #f3f7fb;
+            color: #1f5068;
+        }
+
+        .class-group {
+            margin-bottom: 2rem;
+            border: 1px solid #e0edf2;
+            border-radius: 1.4rem;
+            overflow: hidden;
+        }
+
+        .group-header {
+            background: #eef3f8;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1e5a76;
+        }
+
+        .weekend-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .day-box {
+            flex: 1;
+            min-width: 250px;
+            background: #fefefe;
+            border-radius: 1rem;
+            border: 1px solid #dee7ed;
+        }
+
+        .day-title {
+            background: #f8fafc;
+            padding: 0.5rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c7da0;
+            border-bottom: 1px solid #dce5ec;
+        }
+
+        .activity {
+            padding: 0.6rem;
+            background: #fefcf5;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .counselor-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .status-badge {
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .presente { background: #c8e6d9; color: #1e6f3f; }
+        .ausente { background: #ffe0db; color: #bc3900; }
+
+        .btn-toggle {
+            background: #e6edf2;
+            border: none;
+            border-radius: 30px;
+            padding: 0.2rem 0.8rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+
+        .btn-toggle:hover {
+            background: #cddee8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #3a6b8c;
+            font-size: 1.1rem;
+        }
+
+        .footer-note {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #5d7f97;
+            border-top: 1px solid #e0e9ef;
+            padding-top: 1rem;
+        }
+
+        @media (max-width: 700px) {
+            .page { padding: 1rem; }
+            .nav-btn { padding: 0.4rem 1rem; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="top-bar">
+        <button class="nav-btn active" data-page="page1">📅 Programación</button>
+        <button class="nav-btn" data-page="page2">📚 Historial de Clases</button>
+        <button class="nav-btn" data-page="page3">👧 Consejeras</button>
+    </div>
+
+
+    <!-- PAGE 1: WEEKEND SCHEDULE -->
+    <div id="page1" class="page active-page">
+        <h2>🗓️ Programación Sábado y Domingo</h2>
+        <div class="sub">Clases agrupadas por categoría</div>
+        <div id="weekendContainer"><div class="loading">Cargando horarios...</div></div>
+        <div class="footer-note">💡 Haz clic en "Cambiar" para alternar presencia/ausencia.</div>
+    </div>
+
+    <!-- PAGE 2: CLASS HISTORY -->
+    <div id="page2" class="page">
+        <h2>📖 Registro de Clases Realizadas</h2>
+        <div class="sub">Clases impartidas por cada consejera</div>
+        <div id="historyPanel">
+            <table>
+                <thead>
+                    <tr><th>Consejera</th><th>Clase / Actividad</th><th>Fecha</th><th>Tema</th></tr>
+                </thead>
+                <tbody id="historyBody"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE 3: COUNSELORS -->
+    <div id="page3" class="page">
+        <h2>📋 Nuestras Consejeras</h2>
+        <div class="sub">Días restantes para su próximo cumpleaños 🎂</div>
+        <div id="counselorsGrid" class="grid-cards">
+            <div class="loading">Cargando desde Google Sheets...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ================= CONFIGURATION =================
+    // REEMPLAZA CON LA URL DE TU WEB APP DE APPS SCRIPT
+    const DATA_URL = "https://script.google.com/macros/s/AKfycbyXfOalvYH-ZAUgyicbwk5hKbp35HBHskKH8npZwvjvu1vjnuXgIQe5CgxzdINBU0JUPQ/exec";
+    // =================================================
+
+    let globalData = null;
+    let attendanceState = {};
+
+    // ---------- Helper functions using Day.js ----------
+    function daysUntilBirthday(birthDateStr) {
+        const now = dayjs().startOf('day');
+        const birthDate = dayjs(birthDateStr);
+        
+        let nextBirthday = birthDate.year(now.year()).startOf('day');
+
+        if (nextBirthday.isBefore(now)) {
+            nextBirthday = nextBirthday.add(1, 'year');
+        }
+
+        return nextBirthday.diff(now, 'day');
+    }
+
+    function formatDate(dateStr) {
+        // dateStr: "YYYY-MM-DD"
+        if (!dateStr) return '';
+        const d = dayjs.tz(dateStr, 'America/Lima');
+        if (!d.isValid()) return dateStr;
+        return d.format('DD [de] MMMM [de] YYYY');
+    }
+
+    async function fetchData() {
+        try {
+            const response = await fetch(DATA_URL);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            console.log("Datos cargados correctamente", data);
+            initAttendance(data);
+            return data;
+        } catch (error) {
+            console.error("Error cargando datos:", error);
+            alert("No se pudo cargar la base de datos. Verifica la URL.");
+            return null;
+        }
+    }
+
+    function initAttendance(data) {
+        attendanceState = {};
+        if (!data?.weekendProgram?.classGroups) return;
+        const groups = data.weekendProgram.classGroups;
+        groups.forEach(group => {
+            const className = group.className;
+            ['saturday', 'sunday'].forEach(day => {
+                const counselors = group[day]?.counselors || [];
+                counselors.forEach(cid => {
+                    const key = `${className}_${day}_${cid}`;
+                    attendanceState[key] = true; // presente por defecto
+                });
+            });
+        });
+    }
+
+    // ---------- PAGE 1 ----------
+    function renderWeekend(data) {
+        const container = document.getElementById('weekendContainer');
+        if (!data?.weekendProgram?.classGroups) {
+            container.innerHTML = '<div class="loading">Datos de programación no disponibles</div>';
+            return;
+        }
+        const groups = data.weekendProgram.classGroups;
+        container.innerHTML = '';
+
+        groups.forEach(group => {
+            const className = group.className;
+            const displayName = className.split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+            const saturday = group.saturday;
+            const sunday = group.sunday;
+            if (!saturday || !sunday) return;
+
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'class-group';
+            groupDiv.innerHTML = `<div class="group-header">🐝 ${displayName}</div>`;
+            const weekendDiv = document.createElement('div');
+            weekendDiv.className = 'weekend-row';
+
+            // Helper para crear columna
+            const createDayColumn = (dayKey, dayInfo, dayTitle) => {
+                const box = document.createElement('div');
+                box.className = 'day-box';
+                box.innerHTML = `<div class="day-title">📆 ${dayTitle}</div><div class="activity">🎯 Actividad: ${dayInfo.activity}</div>`;
+                const listDiv = document.createElement('div');
+                dayInfo.counselors.forEach(cid => {
+                    const counselor = data.counselors.find(c => c.id === cid);
+                    const name = counselor ? `${counselor.firstName} ${counselor.lastName}` : `ID ${cid}`;
+                    const counselorClass = counselor ? counselor.class : '';
+                    const key = `${className}_${dayKey}_${cid}`;
+                    const isPresent = attendanceState[key] !== undefined ? attendanceState[key] : true;
+                    const statusClass = isPresent ? 'presente' : 'ausente';
+                    const statusText = isPresent ? 'Presente' : 'Ausente';
+                    const line = document.createElement('div');
+                    line.className = 'counselor-line';
+                    line.innerHTML = `
+                        <div><strong>${name}</strong><br><span style="font-size:0.7rem;">${counselorClass}</span></div>
+                        <div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                            <button class="btn-toggle" data-class="${className}" data-day="${dayKey}" data-id="${cid}">Cambiar</button>
+                        </div>
+                    `;
+                    listDiv.appendChild(line);
+                });
+                box.appendChild(listDiv);
+                return box;
+            };
+
+            weekendDiv.appendChild(createDayColumn('saturday', saturday, 'SÁBADO'));
+            weekendDiv.appendChild(createDayColumn('sunday', sunday, 'DOMINGO'));
+            groupDiv.appendChild(weekendDiv);
+            container.appendChild(groupDiv);
+        });
+
+        document.querySelectorAll('.btn-toggle').forEach(btn => {
+            btn.removeEventListener('click', handleToggle);
+            btn.addEventListener('click', handleToggle);
+        });
+    }
+
+    // ---------- PAGE 2 ----------
+    function renderHistory(data) {
+        const tbody = document.getElementById('historyBody');
+        if (!data) { tbody.innerHTML = '<tr><td colspan="4">Sin datos</td></tr>'; return; }
+        tbody.innerHTML = '';
+        data.classHistory.forEach(entry => {
+            const counselor = data.counselors.find(c => c.id === entry.counselorId);
+            const fullName = counselor ? `${counselor.firstName} ${counselor.lastName}` : 'Desconocida';
+            const formattedDate = formatDate(entry.date);
+            const row = `<tr><td><strong>${fullName}</strong></td><td>${entry.className}</td><td>${formattedDate}</td><td>${entry.topic}</td></tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+
+    // ---------- PAGE 3 ----------
+    function renderCounselors(data) {
+        const container = document.getElementById('counselorsGrid');
+        if (!data) { container.innerHTML = '<div class="loading">Error en datos</div>'; return; }
+        container.innerHTML = '';
+        data.counselors.forEach(c => {
+            const days = daysUntilBirthday(c.birthDate);
+            const birthFormatted = formatDate(c.birthDate);
+            const classCapitalized = c.class.charAt(0).toUpperCase() + c.class.slice(1);
+            const card = document.createElement('div');
+            card.className = 'counselor-card';
+            card.innerHTML = `
+                <h3>${c.firstName} ${c.lastName}</h3>
+                <span class="class-tag">${classCapitalized}</span>
+                <div style="margin-top: 8px;">📅 Nac.: ${birthFormatted}</div>
+                <div>🎂 Días para cumpleaños: <span class="birthday">${days === 0 ? '¡HOY ES SU DÍA!' : `${days} día${days !== 1 ? 's' : ''}`}</span></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function handleToggle(e) {
+        const btn = e.currentTarget;
+        const className = btn.getAttribute('data-class');
+        const day = btn.getAttribute('data-day');
+        const id = parseInt(btn.getAttribute('data-id'));
+        const key = `${className}_${day}_${id}`;
+        attendanceState[key] = !attendanceState[key];
+        renderWeekend(globalData);
+    }
+
+    // ---------- Navigation ----------
+    function switchToPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+        document.getElementById(pageId).classList.add('active-page');
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
+        if (globalData) {
+            if (pageId === 'page1') renderWeekend(globalData);
+            else if (pageId === 'page2') renderHistory(globalData);
+            else if (pageId === 'page3') renderCounselors(globalData);
+        }
+    }
+
+    // ---------- Initialize ----------
+    async function init() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchToPage(btn.getAttribute('data-page')));
+        });
+        const data = await fetchData();
+        if (data) {
+            globalData = data;
+            renderWeekend(globalData);
+            renderHistory(globalData);
+            renderCounselors(globalData);
+        } else {
+            document.getElementById('counselorsGrid').innerHTML = '<div class="loading">❌ Error de conexión. Verifica URL.</div>';
+        }
+    }
+    init();
+</script>
+</body>
+</html>
