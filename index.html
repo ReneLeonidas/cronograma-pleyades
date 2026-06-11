@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consejeras · Gestión de Clases</title>
+
+    <link rel="stylesheet" href="static/css/base.css">
+
+    <!-- Day.js core + plugins: utc, timezone -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/utc.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/timezone.js"></script>
+    <script>
+        dayjs.extend(window.dayjs_plugin_utc);
+        dayjs.extend(window.dayjs_plugin_timezone);
+        // Fijar zona horaria por defecto a Lima (Perú)
+        dayjs.tz.setDefault('America/Lima');
+    </script>
+</head>
+<body>
+<div class="app-container">
+    <div class="top-bar">
+        <button class="nav-btn active" data-page="page1">📅 Programación</button>
+        <button class="nav-btn" data-page="page2">📚 Historial de Clases</button>
+        <button class="nav-btn" data-page="page3">👧 Consejeras</button>
+    </div>
+
+
+    <!-- PAGE 1: WEEKEND SCHEDULE -->
+    <div id="page1" class="page active-page">
+        <h2>🗓️ Programación Sábado y Domingo</h2>
+        <div class="sub">Clases agrupadas por categoría</div>
+        <div id="weekendContainer"><div class="loading">Cargando horarios...</div></div>
+        <div class="footer-note">💡 Haz clic en "Cambiar" para alternar presencia/ausencia.</div>
+    </div>
+
+    <!-- PAGE 2: CLASS HISTORY -->
+    <div id="page2" class="page">
+        <h2>📖 Registro de Clases Realizadas</h2>
+        <div class="sub">Clases impartidas por cada consejera</div>
+        <div id="historyPanel">
+            <table>
+                <thead>
+                    <tr><th>Consejera</th><th>Clase / Actividad</th><th>Fecha</th><th>Tema</th></tr>
+                </thead>
+                <tbody id="historyBody"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE 3: COUNSELORS -->
+    <div id="page3" class="page">
+        <h2>📋 Nuestras Consejeras</h2>
+        <div class="sub">Días restantes para su próximo cumpleaños 🎂</div>
+        <div id="counselorsGrid" class="grid-cards">
+            <div class="loading">Cargando desde Google Sheets...</div>
+        </div>
+    </div>
+</div>
+
+<script src="static/js/main.js"></script>
+</body>
+</html>
