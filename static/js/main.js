@@ -1,4 +1,3 @@
-
 // ================= CONFIGURATION =================
 const DATA_URL = "https://script.google.com/macros/s/AKfycbyXfOalvYH-ZAUgyicbwk5hKbp35HBHskKH8npZwvjvu1vjnuXgIQe5CgxzdINBU0JUPQ/exec";
 // =================================================
@@ -34,29 +33,13 @@ async function fetchData() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         console.log("Datos cargados correctamente", data);
-        initAttendance(data);
+        // initAttendance(data);  // <--- COMENTAR O ELIMINAR
         return data;
     } catch (error) {
         console.error("Error cargando datos:", error);
-        alert("No se pudo cargar la base de datos. Verifica la URL.");
+        alert("No se pudo cargar la base de datos.");
         return null;
     }
-}
-
-function initAttendance(data) {
-    attendanceState = {};
-    if (!data?.weekendProgram?.classGroups) return;
-    const groups = data.weekendProgram.classGroups;
-    groups.forEach(group => {
-        const className = group.className;
-        ['saturday', 'sunday'].forEach(day => {
-            const counselors = group[day]?.counselors || [];
-            counselors.forEach(cid => {
-                const key = `${className}_${day}_${cid}`;
-                attendanceState[key] = true; // presente por defecto
-            });
-        });
-    });
 }
 
 // ---------- PAGE 1 ----------
@@ -82,7 +65,7 @@ function renderWeekend(data) {
         const weekendDiv = document.createElement('div');
         weekendDiv.className = 'weekend-row';
 
-        // Helper para crear columna
+        // Helper para crear columna SIN botón de cambio
         const createDayColumn = (dayKey, dayInfo, dayTitle) => {
             const box = document.createElement('div');
             box.className = 'day-box';
@@ -92,17 +75,12 @@ function renderWeekend(data) {
                 const counselor = data.counselors.find(c => c.id === cid);
                 const name = counselor ? `${counselor.firstName} ${counselor.lastName}` : `ID ${cid}`;
                 const counselorClass = counselor ? counselor.class : '';
-                const key = `${className}_${dayKey}_${cid}`;
-                const isPresent = attendanceState[key] !== undefined ? attendanceState[key] : true;
-                const statusClass = isPresent ? 'presente' : 'ausente';
-                const statusText = isPresent ? 'Presente' : 'Ausente';
                 const line = document.createElement('div');
                 line.className = 'counselor-line';
                 line.innerHTML = `
                     <div><strong>${name}</strong><br><span style="font-size:0.7rem;">${counselorClass}</span></div>
                     <div>
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                        <button class="btn-toggle" data-class="${className}" data-day="${dayKey}" data-id="${cid}">Cambiar</button>
+                        <span class="status-badge presente">Presente</span>
                     </div>
                 `;
                 listDiv.appendChild(line);
@@ -116,11 +94,6 @@ function renderWeekend(data) {
         groupDiv.appendChild(weekendDiv);
         container.appendChild(groupDiv);
     });
-
-    document.querySelectorAll('.btn-toggle').forEach(btn => {
-        btn.removeEventListener('click', handleToggle);
-        btn.addEventListener('click', handleToggle);
-    });
 }
 
 // ---------- PAGE 2 ----------
@@ -129,10 +102,20 @@ function renderHistory(data) {
     if (!data) { tbody.innerHTML = '<tr><td colspan="4">Sin datos</td></tr>'; return; }
     tbody.innerHTML = '';
     data.classHistory.forEach(entry => {
-        const counselor = data.counselors.find(c => c.id === entry.counselorId);
-        const fullName = counselor ? `${counselor.firstName} ${counselor.lastName}` : 'Desconocida';
         const formattedDate = formatDate(entry.date);
-        const row = `<tr><td><strong>${fullName}</strong></td><td>${entry.className}</td><td>${formattedDate}</td><td>${entry.topic}</td></tr>`;
+        const isActive = entry.status == 1;
+        const statusText = isActive ? 'Activo' : 'Inactivo';
+        const statusClass = isActive ? 'status-active' : 'status-inactive';
+        const rowClass = isActive ? 'class-row-active' : '';
+        
+        const row = `
+            <tr class="${rowClass}">
+                <td><strong>${entry.className}</strong></td>
+                <td>${formattedDate}</td>
+                <td>${entry.topic}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            </table>
+        `;
         tbody.insertAdjacentHTML('beforeend', row);
     });
 }
@@ -159,15 +142,6 @@ function renderCounselors(data) {
     });
 }
 
-function handleToggle(e) {
-    const btn = e.currentTarget;
-    const className = btn.getAttribute('data-class');
-    const day = btn.getAttribute('data-day');
-    const id = parseInt(btn.getAttribute('data-id'));
-    const key = `${className}_${day}_${id}`;
-    attendanceState[key] = !attendanceState[key];
-    renderWeekend(globalData);
-}
 
 // ---------- Navigation ----------
 function switchToPage(pageId) {
@@ -197,4 +171,5 @@ async function init() {
         document.getElementById('counselorsGrid').innerHTML = '<div class="loading">❌ Error de conexión. Verifica URL.</div>';
     }
 }
+
 init();

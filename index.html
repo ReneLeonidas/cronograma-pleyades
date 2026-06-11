@@ -17,6 +17,8 @@
         // Fijar zona horaria por defecto a Lima (Perú)
         dayjs.tz.setDefault('America/Lima');
     </script>
+
+    <link rel="icon" href="static/images/favicon.png">
 </head>
 <body>
 <div class="app-container">
@@ -42,7 +44,7 @@
         <div id="historyPanel">
             <table>
                 <thead>
-                    <tr><th>Consejera</th><th>Clase / Actividad</th><th>Fecha</th><th>Tema</th></tr>
+                    <tr><th>Clase</th><th>Fecha</th><th>Tema</th><th>Estado</th></tr>
                 </thead>
                 <tbody id="historyBody"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
             </table>
