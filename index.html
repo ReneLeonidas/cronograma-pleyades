@@ -5,58 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consejeras · Gestión de Clases</title>
 
+    <!-- CSS Principal -->
     <link rel="stylesheet" href="static/css/base.css">
 
     <!-- Day.js core + plugins: utc, timezone -->
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/utc.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/timezone.js"></script>
-    <script>
-        dayjs.extend(window.dayjs_plugin_utc);
-        dayjs.extend(window.dayjs_plugin_timezone);
-        // Fijar zona horaria por defecto a Lima (Perú)
-        dayjs.tz.setDefault('America/Lima');
-    </script>
+
+    <!-- Reemplazar la línea actual de Vue por: -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 
     <link rel="icon" href="static/images/favicon.png">
 </head>
 <body>
-<div class="app-container">
-    <div class="top-bar">
-        <button class="nav-btn active" data-page="page1">📅 Programación</button>
-        <button class="nav-btn" data-page="page2">📚 Historial de Clases</button>
-        <button class="nav-btn" data-page="page3">👧 Consejeras</button>
-    </div>
-
-
-    <!-- PAGE 1: WEEKEND SCHEDULE -->
-    <div id="page1" class="page active-page">
-        <h2>🗓️ Programación Sábado y Domingo</h2>
-        <div class="sub">Clases agrupadas por categoría</div>
-        <div id="weekendContainer"><div class="loading">Cargando horarios...</div></div>
-        <div class="footer-note">💡 Haz clic en "Cambiar" para alternar presencia/ausencia.</div>
-    </div>
-
-    <!-- PAGE 2: CLASS HISTORY -->
-    <div id="page2" class="page">
-        <h2>📖 Registro de Clases Realizadas</h2>
-        <div class="sub">Clases impartidas por cada consejera</div>
-        <div id="historyPanel">
-            <table>
-                <thead>
-                    <tr><th>Clase</th><th>Fecha</th><th>Tema</th><th>Estado</th></tr>
-                </thead>
-                <tbody id="historyBody"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
-            </table>
+<div id="app">
+    <div class="app-container">
+        <div class="top-bar">
+            <button 
+                v-for="tab in tabs" 
+                :key="tab.id"
+                class="nav-btn" 
+                :class="{ active: currentPage === tab.id }"
+                @click="switchToPage(tab.id)">
+                📅 {{ tab.label }}
+            </button>
         </div>
-    </div>
 
-    <!-- PAGE 3: COUNSELORS -->
-    <div id="page3" class="page">
-        <h2>📋 Nuestras Consejeras</h2>
-        <div class="sub">Días restantes para su próximo cumpleaños 🎂</div>
-        <div id="counselorsGrid" class="grid-cards">
-            <div class="loading">Cargando desde Google Sheets...</div>
+        <!-- PÁGINA 1: Programación Sábado y Domingo -->
+        <div v-show="currentPage === 'page1'" class="page active-page">
+            <h2>🗓️ Programación Sábado y Domingo</h2>
+            <div class="sub">Clases agrupadas por categoría</div>
+            <div v-if="loading" class="loading">Cargando horarios...</div>
+            <div v-else-if="!weekendGroups || weekendGroups.length === 0" class="loading">Datos de programación no disponibles</div>
+            <div v-else>
+                <div v-for="group in weekendGroups" :key="group.className" class="class-group">
+                    <div class="group-header">🐝 {{ formatClassName(group.className) }}</div>
+                    <div class="weekend-row">
+                        <!-- Columna Sábado -->
+                        <div class="day-box">
+                            <div class="day-title">📆 SÁBADO</div>
+                            <div class="activity">🎯 Actividad: {{ group.saturday?.activity }}</div>
+                            <div v-for="counselorId in group.saturday?.counselors" :key="counselorId" class="counselor-line">
+                                <div>
+                                    <strong>{{ getCounselorName(counselorId) }}</strong><br>
+                                    <span style="font-size:0.7rem;">{{ getCounselorClass(counselorId) }}</span>
+                                </div>
+                                <div><span class="status-badge presente">Presente</span></div>
+                            </div>
+                        </div>
+                        <!-- Columna Domingo -->
+                        <div class="day-box">
+                            <div class="day-title">📆 DOMINGO</div>
+                            <div class="activity">🎯 Actividad: {{ group.sunday?.activity }}</div>
+                            <div v-for="counselorId in group.sunday?.counselors" :key="counselorId" class="counselor-line">
+                                <div>
+                                    <strong>{{ getCounselorName(counselorId) }}</strong><br>
+                                    <span style="font-size:0.7rem;">{{ getCounselorClass(counselorId) }}</span>
+                                </div>
+                                <div><span class="status-badge presente">Presente</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-note">💡 Asistencia siempre presente (sin cambios)</div>
+        </div>
+
+        <!-- PÁGINA 2: Historial de Clases -->
+        <div v-show="currentPage === 'page2'" class="page active-page">
+            <h2>📖 Registro de Clases Realizadas</h2>
+            <div class="sub">Clases impartidas</div>
+            <div v-if="loading" class="loading">Cargando historial...</div>
+            <div v-else-if="!classHistoryList || classHistoryList.length === 0" class="loading">No hay clases registradas</div>
+            <div v-else>
+                <table>
+                    <thead>
+                        <tr><th>Clase</th><th>Fecha</th><th>Tema</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="entry in classHistoryList" :key="entry.id" :class="{ 'class-row-active': entry.status == 1 }">
+                            <td><strong>{{ entry.className }}</strong></td>
+                            <td>{{ formatDate(entry.date) }}</td>
+                            <td>{{ entry.topic }}</td>
+                            <td>
+                                <span class="status-badge" :class="entry.status == 1 ? 'status-active' : 'status-inactive'">
+                                    {{ entry.status == 1 ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PÁGINA 3: Consejeras -->
+        <div v-show="currentPage === 'page3'" class="page active-page">
+            <h2>📋 Nuestras Consejeras</h2>
+            <div class="sub">Días restantes para su próximo cumpleaños 🎂</div>
+            <div v-if="loading" class="loading">Cargando consejeras...</div>
+            <div v-else-if="!counselorsList || counselorsList.length === 0" class="loading">No hay consejeras registradas</div>
+            <div v-else class="grid-cards">
+                <div v-for="counselor in counselorsList" :key="counselor.id" class="counselor-card">
+                    <h3>{{ counselor.firstName }} {{ counselor.lastName }}</h3>
+                    <span class="class-tag">{{ capitalize(counselor.class) }}</span>
+                    <div style="margin-top: 8px;">📅 Nac.: {{ formatDate(counselor.birthDate) }}</div>
+                    <div>
+                        🎂 Días para cumpleaños: 
+                        <span class="birthday">
+                            {{ daysUntilBirthday(counselor.birthDate) === 0 ? '¡HOY ES SU DÍA!' : daysUntilBirthday(counselor.birthDate) + ' día' + (daysUntilBirthday(counselor.birthDate) !== 1 ? 's' : '') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
