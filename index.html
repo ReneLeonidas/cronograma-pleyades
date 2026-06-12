@@ -79,23 +79,30 @@
             <div v-if="loading" class="loading">Cargando historial...</div>
             <div v-else-if="!classHistoryList || classHistoryList.length === 0" class="loading">No hay clases registradas</div>
             <div v-else>
-                <table>
-                    <thead>
-                        <tr><th>Clase</th><th>Fecha</th><th>Tema</th><th>Estado</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="entry in classHistoryList" :key="entry.id" :class="{ 'class-row-active': entry.status == 1 }">
-                            <td><strong>{{ entry.className }}</strong></td>
-                            <td>{{ formatDate(entry.date) }}</td>
-                            <td>{{ entry.topic }}</td>
-                            <td>
-                                <span class="status-badge" :class="entry.status == 1 ? 'status-active' : 'status-inactive'">
-                                    {{ entry.status == 1 ? 'Activo' : 'Inactivo' }}
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="history-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Clase</th>
+                                <th>Fecha</th>
+                                <th>Tema</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="entry in classHistoryList" :key="entry.id" :class="{ 'class-row-active': entry.status == 1 }">
+                                <td data-label="Clase"><strong>{{ entry.className }}</strong></td>
+                                <td data-label="Fecha">{{ formatDate(entry.date) }}</td>
+                                <td data-label="Tema">{{ entry.topic }}</td>
+                                <td data-label="Estado">
+                                    <span class="status-badge" :class="entry.status == 1 ? 'status-active' : 'status-inactive'">
+                                        {{ entry.status == 1 ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
